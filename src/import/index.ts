@@ -23,6 +23,7 @@ import {importFromChromeHeapProfile} from './v8heapalloc'
 import {isTraceEventFormatted, importTraceEvents} from './trace-event'
 import {importFromCallgrind} from './callgrind'
 import {importFromPapyrus} from './papyrus'
+import { importJsProfiles, isJSProfile } from './js-profile'
 
 export async function importProfileGroupFromText(
   fileName: string,
@@ -131,7 +132,9 @@ async function _importProfileGroup(dataSource: ProfileDataSource): Promise<Profi
     parsed = contents.parseAsJSON()
   } catch (e) {}
   if (parsed) {
-    if (parsed['$schema'] === 'https://www.speedscope.app/file-format-schema.json') {
+    if (isJSProfile(parsed)) {
+      return toGroup(importJsProfiles(parsed));
+    } else if (parsed['$schema'] === 'https://www.speedscope.app/file-format-schema.json') {
       console.log('Importing as speedscope json file')
       return importSpeedscopeProfiles(parsed)
     } else if (parsed['systemHost'] && parsed['systemHost']['name'] == 'Firefox') {
